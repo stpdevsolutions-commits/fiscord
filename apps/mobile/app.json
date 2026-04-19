@@ -1,0 +1,37 @@
+{
+  "expo": {
+    "name": "Fiscord",
+    "slug": "fiscord",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "fiscord",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#2563eb"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.fiscord.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#2563eb"
+      },
+      "package": "com.fiscord.app"
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Fiscord necesita acceso a la cámara para escanear facturas."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Fiscord necesita acceso a tus fotos para adjuntar facturas."
+        }
+      ]
+    ]
+  }
+}
