@@ -1,0 +1,9 @@
+{
+  "name": "fiscord-mobile",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "echo 'Mobile - coming soon'",
+    "build": "echo 'Mobile - coming soon'"
+  }
+}
