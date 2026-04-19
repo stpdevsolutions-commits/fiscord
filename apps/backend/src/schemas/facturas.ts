@@ -37,4 +37,7 @@ export const createFacturaSchema = z.object({
     .optional(),
 });
 
+export const updateFacturaSchema = createFacturaSchema.partial();
+
 export type CreateFacturaInput = z.infer<typeof createFacturaSchema>;
+export type UpdateFacturaInput = z.infer<typeof updateFacturaSchema>;

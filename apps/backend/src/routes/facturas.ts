@@ -1,8 +1,9 @@
 import { Router, Request, Response } from 'express';
-import { createFacturaSchema } from '../schemas/facturas';
+import { createFacturaSchema, updateFacturaSchema } from '../schemas/facturas';
 import { authMiddleware } from '../middleware/auth';
 import { db } from '../database/db';
 import type { Factura } from '../types';
+import { validate as validateUUID } from 'uuid';
 
 const router = Router();
 
@@ -192,6 +193,194 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
     });
   } catch (err) {
     console.error('[facturas] GET error:', err);
+    res.status(500).json({ error: 'InternalServerError', message: 'Error en el servidor' });
+  }
+});
+
+router.get('/:id', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const userId = req.user!.userId;
+
+    if (!validateUUID(id)) {
+      res.status(400).json({ error: 'ValidationError', message: 'ID debe ser un UUID válido' });
+      return;
+    }
+
+    const factura = await db.query<Factura>(
+      'SELECT * FROM facturas WHERE id = $1 AND usuario_id = $2 AND deleted_at IS NULL',
+      [id, userId],
+    );
+
+    if (factura.length === 0) {
+      res.status(404).json({ error: 'NotFoundError', message: 'Factura no encontrada' });
+      return;
+    }
+
+    res.status(200).json({ factura: factura[0] });
+  } catch (err) {
+    console.error('[facturas] GET/:id error:', err);
+    res.status(500).json({ error: 'InternalServerError', message: 'Error en el servidor' });
+  }
+});
+
+router.put('/:id', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const userId = req.user!.userId;
+
+    if (!validateUUID(id)) {
+      res.status(400).json({ error: 'ValidationError', message: 'ID debe ser un UUID válido' });
+      return;
+    }
+
+    const validation = updateFacturaSchema.safeParse(req.body);
+    if (!validation.success) {
+      res.status(400).json({
+        error: 'ValidationError',
+        message: validation.error.issues[0].message,
+        details: validation.error.issues.map((i) => ({
+          field: i.path.join('.'),
+          message: i.message,
+        })),
+      });
+      return;
+    }
+
+    if (req.body.usuario_id) {
+      res.status(400).json({
+        error: 'ValidationError',
+        message: 'No se puede cambiar el usuario_id',
+      });
+      return;
+    }
+
+    const factura = await db.query<Factura>(
+      'SELECT * FROM facturas WHERE id = $1 AND usuario_id = $2 AND deleted_at IS NULL',
+      [id, userId],
+    );
+
+    if (factura.length === 0) {
+      res.status(404).json({ error: 'NotFoundError', message: 'Factura no encontrada' });
+      return;
+    }
+
+    const { ncf, rnc_proveedor, tipo_factura, monto, itbis, isr, fecha_factura, fecha_vencimiento, descripcion, foto_url } = validation.data;
+
+    if (ncf && ncf !== factura[0].ncf) {
+      const duplicate = await db.query<{ id: string }>(
+        'SELECT id FROM facturas WHERE ncf = $1 AND id != $2 AND deleted_at IS NULL',
+        [ncf, id],
+      );
+      if (duplicate.length > 0) {
+        res.status(409).json({
+          error: 'ConflictError',
+          message: `El NCF ${ncf} ya está registrado`,
+        });
+        return;
+      }
+    }
+
+    const updates: string[] = [];
+    const values: any[] = [];
+    let paramIndex = 1;
+
+    if (ncf !== undefined) {
+      updates.push(`ncf = $${paramIndex}`);
+      values.push(ncf);
+      paramIndex++;
+    }
+    if (rnc_proveedor !== undefined) {
+      updates.push(`rnc_proveedor = $${paramIndex}`);
+      values.push(rnc_proveedor);
+      paramIndex++;
+    }
+    if (tipo_factura !== undefined) {
+      updates.push(`tipo_factura = $${paramIndex}`);
+      values.push(tipo_factura);
+      paramIndex++;
+    }
+    if (monto !== undefined) {
+      updates.push(`monto = $${paramIndex}`);
+      values.push(monto);
+      paramIndex++;
+    }
+    if (itbis !== undefined) {
+      updates.push(`itbis = $${paramIndex}`);
+      values.push(itbis);
+      paramIndex++;
+    }
+    if (isr !== undefined) {
+      updates.push(`isr = $${paramIndex}`);
+      values.push(isr);
+      paramIndex++;
+    }
+    if (fecha_factura !== undefined) {
+      updates.push(`fecha_factura = $${paramIndex}`);
+      values.push(fecha_factura);
+      paramIndex++;
+    }
+    if (fecha_vencimiento !== undefined) {
+      updates.push(`fecha_vencimiento = $${paramIndex}`);
+      values.push(fecha_vencimiento ?? null);
+      paramIndex++;
+    }
+    if (descripcion !== undefined) {
+      updates.push(`descripcion = $${paramIndex}`);
+      values.push(descripcion ?? null);
+      paramIndex++;
+    }
+    if (foto_url !== undefined) {
+      updates.push(`foto_url = $${paramIndex}`);
+      values.push(foto_url ?? null);
+      paramIndex++;
+    }
+
+    if (updates.length === 0) {
+      res.status(200).json({ factura: factura[0] });
+      return;
+    }
+
+    values.push(id);
+    const updateQuery = `UPDATE facturas SET ${updates.join(', ')} WHERE id = $${paramIndex} RETURNING *`;
+
+    const updated = await db.query<Factura>(updateQuery, values);
+
+    res.status(200).json({ factura: updated[0] });
+  } catch (err) {
+    console.error('[facturas] PUT/:id error:', err);
+    res.status(500).json({ error: 'InternalServerError', message: 'Error en el servidor' });
+  }
+});
+
+router.delete('/:id', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const userId = req.user!.userId;
+
+    if (!validateUUID(id)) {
+      res.status(400).json({ error: 'ValidationError', message: 'ID debe ser un UUID válido' });
+      return;
+    }
+
+    const factura = await db.query<Factura>(
+      'SELECT * FROM facturas WHERE id = $1 AND usuario_id = $2 AND deleted_at IS NULL',
+      [id, userId],
+    );
+
+    if (factura.length === 0) {
+      res.status(404).json({ error: 'NotFoundError', message: 'Factura no encontrada' });
+      return;
+    }
+
+    await db.query(
+      'UPDATE facturas SET deleted_at = NOW() WHERE id = $1',
+      [id],
+    );
+
+    res.status(200).json({ message: 'Factura eliminada' });
+  } catch (err) {
+    console.error('[facturas] DELETE/:id error:', err);
     res.status(500).json({ error: 'InternalServerError', message: 'Error en el servidor' });
   }
 });
