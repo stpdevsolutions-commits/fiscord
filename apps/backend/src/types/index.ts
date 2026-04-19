@@ -17,3 +17,25 @@ export interface AuthResponse {
   user: User;
   expiresIn: number;
 }
+
+export type TipoFactura = 'E31' | 'E32' | 'E33' | 'B01' | 'B02' | 'B03' | 'B04';
+export type EstadoFactura = 'activa' | 'cancelada' | 'duplicada';
+
+export interface Factura {
+  id: string;
+  usuario_id: string;
+  ncf: string;
+  rnc_proveedor: string;
+  tipo_factura: TipoFactura;
+  monto: number;
+  itbis: number;
+  isr: number;
+  fecha_factura: string;
+  fecha_vencimiento?: string;
+  descripcion?: string;
+  foto_url?: string;
+  estado: EstadoFactura;
+  created_at: string;
+  updated_at: string;
+  deleted_at?: string;
+}
