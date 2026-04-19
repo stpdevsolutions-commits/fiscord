@@ -4,10 +4,12 @@ import { Header } from '../components/Header';
 import { FacturasTable } from '../components/FacturasTable';
 import { FacturaForm } from '../components/FacturaForm';
 import type { Factura } from '../types';
+import { Reportes606Modal } from '../components/Reportes606Modal';
 
 export const DashboardPage = () => {
   const { facturas, loading, error, pagination, getAll, create, update, delete: deleteFactura } = useFacturas();
   const [showForm, setShowForm] = useState(false);
+  const [show606, setShow606] = useState(false);
   const [editingFactura, setEditingFactura] = useState<Factura | undefined>(undefined);
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState({
@@ -135,12 +137,20 @@ export const DashboardPage = () => {
               </div>
             </div>
 
-            <button
-              onClick={handleCreateClick}
-              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition font-medium"
-            >
-              + Agregar Factura
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShow606(true)}
+                className="px-5 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition font-medium flex items-center gap-2"
+              >
+                ⬇ Descargar 606
+              </button>
+              <button
+                onClick={handleCreateClick}
+                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition font-medium"
+              >
+                + Agregar Factura
+              </button>
+            </div>
           </div>
         </div>
 
@@ -183,6 +193,8 @@ export const DashboardPage = () => {
           </div>
         )}
       </div>
+
+      {show606 && <Reportes606Modal onClose={() => setShow606(false)} />}
 
       {/* Modal Formulario */}
       {showForm && (

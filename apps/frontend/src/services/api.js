@@ -76,4 +76,14 @@ export const facturasAPI = {
         return data;
     },
 };
+export const reportesAPI = {
+    generate606: async (mes, anio, filters) => {
+        const response = await apiClient.post('/reportes/606/generate', { mes, anio, ...filters }, { responseType: 'blob' });
+        const disposition = response.headers['content-disposition'];
+        const filas = parseInt(response.headers['x-606-filas'] ?? '0', 10);
+        const filename = disposition?.match(/filename="?([^"]+)"?/)?.[1] ??
+            `DGII_606_${anio}${String(mes).padStart(2, '0')}.xlsx`;
+        return { blob: response.data, filename, filas };
+    },
+};
 //# sourceMappingURL=api.js.map

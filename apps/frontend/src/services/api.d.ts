@@ -24,4 +24,14 @@ export declare const facturasAPI: {
         message: string;
     }>;
 };
+export declare const reportesAPI: {
+    generate606: (mes: number, anio: number, filters?: {
+        estado?: string;
+        tipo_factura?: string;
+    }) => Promise<{
+        blob: Blob;
+        filename: string;
+        filas: number;
+    }>;
+};
 //# sourceMappingURL=api.d.ts.map

@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import { config } from './config';
 import authRoutes from './routes/auth';
 import facturasRoutes from './routes/facturas';
+import reportesRoutes from './routes/reportes';
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.get('/', (_req: Request, res: Response) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/facturas', facturasRoutes);
+app.use('/api/reportes', reportesRoutes);
 
 app.use((_req: Request, res: Response) => {
   res.status(404).json({ error: 'Not found', code: 'NOT_FOUND' });
